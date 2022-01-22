@@ -78,9 +78,30 @@ func (p PairList) Len() int           { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+// check if array contains the given value.
+func arrayContains(arr []int, val int) bool {
+	for _, v := range arr {
+		if val == v {
+			return true
+		}
+	}
+	return false
+}
+
+// count the number of values in the given map[string][]int.
+func countValues(m map[string][]int) int {
+	count := 0
+	for _, v := range m {
+		for range v {
+			count++
+		}
+	}
+	return count
+}
+
 // Narrows down the word list from the guess and result.
 // Receives yellowRunes and greenRunes to take into account previous results.
-func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRunes map[string]int, guess string, result string) (map[string]int, map[string]int, []string) {
+func narrowDownWordList(wordList []string, yellowRunes map[string][]int, greenRunes map[string][]int, guess string, result string) (map[string][]int, map[string][]int, []string) {
 	// Parse/initialize values from the guess/result strings.
 	var blankRunes []string
 	for index, r := range result {
@@ -88,14 +109,20 @@ func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRune
 			blankRunes = append(blankRunes, string(guess[index]))
 		}
 		if string(r) == "y" {
-			yellowRunes[string(guess[index])] = index
+			// if the yellowRunes map does not have the given index, append it to the value.
+			if !arrayContains(yellowRunes[string(guess[index])], index) {
+				yellowRunes[string(guess[index])] = append(yellowRunes[string(guess[index])], index)
+			}
 		}
 		if string(r) == "g" {
-			greenRunes[string(guess[index])] = index
+			// if the greenRunes map does not have the given index, append it to the value.
+			if !arrayContains(greenRunes[string(guess[index])], index) {
+				greenRunes[string(guess[index])] = append(greenRunes[string(guess[index])], index)
+			}
 		}
 	}
-	yellowRunesCount := len(yellowRunes)
-	greenRunesCount := len(greenRunes)
+	yellowRunesCount := countValues(yellowRunes)
+	greenRunesCount := countValues(greenRunes)
 
 	var newWordList []string
 	for _, w := range wordList {
@@ -115,25 +142,32 @@ func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRune
 				break
 			}
 			// choose words with wrong yellow runes
-			for y, yindex := range yellowRunes {
+			for y, yArr := range yellowRunes {
 				// if the word contains the yellow rune at the exact same spot, that word is wrong.
-				if i == yindex && string(r) == y {
-					wordHasWrongY = true
-					break
+				for _, yindex := range yArr {
+					if i == yindex && string(r) == y {
+						wordHasWrongY = true
+						break
+					}
+					// count the number of yellow runes.
+					if i != yindex && string(r) == y {
+						currentYCount++
+					}
 				}
-				// count the number of yellow runes.
-				if i != yindex && string(r) == y {
-					currentYCount++
+				if wordHasWrongY {
+					break
 				}
 			}
 			if wordHasWrongY {
 				break
 			}
 			// choose words with green runes
-			for g, gindex := range greenRunes {
+			for g, gArr := range greenRunes {
 				// count the number of green runes.
-				if i == gindex && string(r) == g {
-					currentGCount++
+				for _, gindex := range gArr {
+					if i == gindex && string(r) == g {
+						currentGCount++
+					}
 				}
 			}
 		}
@@ -142,7 +176,8 @@ func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRune
 		// - the word does not have yellow runes at wrong spots.
 		// - the word has a correct number of yellow runes.
 		// - the word has a correct number of green runes.
-		if !wordHasBlank && !wordHasWrongY && yellowRunesCount == currentYCount && greenRunesCount == currentGCount {
+		// Note: the currentYCount value may be greater than the yellowRunesCount when a rune repeats within the word.
+		if !wordHasBlank && !wordHasWrongY && yellowRunesCount <= currentYCount && greenRunesCount == currentGCount {
 			newWordList = append(newWordList, w)
 		}
 	}
@@ -157,8 +192,8 @@ func main() {
 	var wordList = getInitialWordList(*path)
 	candidateList := wordList
 	try := 1
-	yellowRunes := map[string]int{}
-	greenRunes := map[string]int{}
+	yellowRunes := map[string][]int{}
+	greenRunes := map[string][]int{}
 
 	// You only get 6 tries.
 	for try < 7 {
