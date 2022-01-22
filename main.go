@@ -146,7 +146,9 @@ func main() {
 
 	for try < 7 {
 		fmt.Printf("-----Try number %d-----\n", try)
-		if len(candidateList) > 10 {
+		if len(candidateList) == 1 {
+			fmt.Printf("There is 1 candidate. This is probably the answer: %s\n\n", candidateList[0])
+		} else if len(candidateList) > 10 {
 			fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n\n", len(candidateList), candidateList[0:10])
 		} else {
 			fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n\n", len(candidateList), candidateList)
@@ -155,10 +157,12 @@ func main() {
 		var runeScoreMap = getRuneScoreMap(candidateList)
 		var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
 		var sortedwordScoreMap = rankByWordCount(wordScoreMap)
-		if sortedwordScoreMap.Len() > 10 {
-			fmt.Printf("Here are the first 10 recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap[0:10])
-		} else {
-			fmt.Printf("Here are the recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap)
+		if len(candidateList) != 1 {
+			if sortedwordScoreMap.Len() > 10 {
+				fmt.Printf("Here are the first 10 recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap[0:10])
+			} else {
+				fmt.Printf("Here are the recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap)
+			}
 		}
 
 		scanner := bufio.NewScanner(os.Stdin)
