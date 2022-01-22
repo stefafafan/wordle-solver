@@ -74,6 +74,52 @@ func (p PairList) Len() int           { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+func narrowDownWordList(wordList []string, guess string, result string) []string {
+	var blankRunes []string
+	yellowRunes := map[string]int{}
+	greenRunes := map[string]int{}
+	for index, r := range result {
+		if string(r) == "b" {
+			blankRunes = append(blankRunes, string(guess[index]))
+		}
+		if string(r) == "y" {
+			yellowRunes[string(guess[index])] = index
+		}
+		if string(r) == "g" {
+			greenRunes[string(guess[index])] = index
+		}
+	}
+	fmt.Printf("blankRunes: %v\n", blankRunes)
+	fmt.Printf("yellowRunes: %v\n", yellowRunes)
+	fmt.Printf("greenRunes: %v\n", greenRunes)
+
+	var newWordList []string
+	for _, w := range wordList {
+		// remove words with blank runes
+		wordHasBlank := false
+		for _, r := range w {
+			for _, b := range blankRunes {
+				if string(r) == b {
+					wordHasBlank = true
+					break
+				}
+			}
+			if wordHasBlank {
+				break
+			}
+		}
+		if !wordHasBlank {
+			newWordList = append(newWordList, w)
+		}
+	}
+
+	return newWordList
+
+	// choose words with yellow runes
+
+	// choose words with green runes
+}
+
 func main() {
 	path := flag.String("dictionary", "", "Specify dictionary file path")
 	flag.Parse()
@@ -99,8 +145,12 @@ func main() {
 	scanner.Scan()
 	result := scanner.Text()
 
-	fmt.Printf("Guess: %s, Result: %s", guess, result)
+	fmt.Printf("Guess: %s, Result: %s\n", guess, result)
 
 	// TODO: narrow down word list from guess and result
+	wordList = narrowDownWordList(wordList, guess, result)
+	fmt.Printf("%v\n", wordList)
+	fmt.Printf("%d\n", len(wordList))
+
 	// TODO: recalculate runeScoreMap && wordScoreMap (e.g recur)
 }
