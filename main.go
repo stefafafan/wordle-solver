@@ -139,30 +139,32 @@ func main() {
 	var wordList = getInitialWordList(*path)
 	try := 1
 
-	fmt.Printf("Try number %d\n", try)
-	var runeScoreMap = getRuneScoreMap(wordList)
-	var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
-	var sortedwordScoreMap = rankByWordCount(wordScoreMap)
-	if sortedwordScoreMap.Len() > 10 {
-		fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
-	} else {
-		fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+	for try < 7 {
+		fmt.Printf("Try number %d\n", try)
+		var runeScoreMap = getRuneScoreMap(wordList)
+		var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
+		var sortedwordScoreMap = rankByWordCount(wordScoreMap)
+		if sortedwordScoreMap.Len() > 10 {
+			fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+		} else {
+			fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap)
+		}
+
+		scanner := bufio.NewScanner(os.Stdin)
+		fmt.Print("Enter your guess: ")
+		scanner.Scan()
+		guess := scanner.Text()
+		fmt.Print("Enter the result (b: blank, y: yellow, g: green): ")
+		scanner.Scan()
+		result := scanner.Text()
+		fmt.Printf("Guess: %s, Result: %s\n\n", guess, result)
+		if result == "ggggg" {
+			fmt.Println("GJ!")
+			break
+		}
+
+		wordList = narrowDownWordList(wordList, guess, result)
+		try++
 	}
-
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("Enter your guess: ")
-	scanner.Scan()
-	guess := scanner.Text()
-	fmt.Print("Enter the result (b: blank, y: yellow, g: green): ")
-	scanner.Scan()
-	result := scanner.Text()
-
-	fmt.Printf("Guess: %s, Result: %s\n", guess, result)
-
-	// TODO: narrow down word list from guess and result
-	wordList = narrowDownWordList(wordList, guess, result)
-	fmt.Printf("%v\n", wordList)
-	fmt.Printf("%d\n", len(wordList))
-
-	// TODO: recalculate runeScoreMap && wordScoreMap (e.g recur)
+	fmt.Println("Game over.")
 }
