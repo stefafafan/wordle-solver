@@ -78,6 +78,7 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 	var blankRunes []string
 	yellowRunes := map[string]int{}
 	greenRunes := map[string]int{}
+	greenRunesCount := 0
 	for index, r := range result {
 		if string(r) == "b" {
 			blankRunes = append(blankRunes, string(guess[index]))
@@ -87,17 +88,17 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 		}
 		if string(r) == "g" {
 			greenRunes[string(guess[index])] = index
+			greenRunesCount++
 		}
 	}
-	fmt.Printf("blankRunes: %v\n", blankRunes)
-	fmt.Printf("yellowRunes: %v\n", yellowRunes)
-	fmt.Printf("greenRunes: %v\n", greenRunes)
 
 	var newWordList []string
 	for _, w := range wordList {
-		// remove words with blank runes
 		wordHasBlank := false
-		for _, r := range w {
+		wordHasWrongY := false
+		currentGCount := 0
+		for i, r := range w {
+			// remove words with blank runes
 			for _, b := range blankRunes {
 				if string(r) == b {
 					wordHasBlank = true
@@ -107,17 +108,28 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 			if wordHasBlank {
 				break
 			}
+			// choose words with wrong yellow runes
+			for y, yindex := range yellowRunes {
+				if i == yindex && string(r) == y {
+					wordHasWrongY = true
+					break
+				}
+			}
+			if wordHasWrongY {
+				break
+			}
+			// choose words with green runes
+			for g, gindex := range greenRunes {
+				if i == gindex && string(r) == g {
+					currentGCount++
+				}
+			}
 		}
-		if !wordHasBlank {
+		if !wordHasBlank && !wordHasWrongY && greenRunesCount == currentGCount {
 			newWordList = append(newWordList, w)
 		}
 	}
-
 	return newWordList
-
-	// choose words with yellow runes
-
-	// choose words with green runes
 }
 
 func main() {
