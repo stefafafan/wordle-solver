@@ -74,11 +74,8 @@ func (p PairList) Len() int           { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func narrowDownWordList(wordList []string, guess string, result string) []string {
+func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRunes map[string]int, guess string, result string) (map[string]int, map[string]int, []string) {
 	var blankRunes []string
-	yellowRunes := map[string]int{}
-	greenRunes := map[string]int{}
-	greenRunesCount := 0
 	for index, r := range result {
 		if string(r) == "b" {
 			blankRunes = append(blankRunes, string(guess[index]))
@@ -88,14 +85,16 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 		}
 		if string(r) == "g" {
 			greenRunes[string(guess[index])] = index
-			greenRunesCount++
 		}
 	}
+	yellowRunesCount := len(yellowRunes)
+	greenRunesCount := len(greenRunes)
 
 	var newWordList []string
 	for _, w := range wordList {
 		wordHasBlank := false
 		wordHasWrongY := false
+		currentYCount := 0
 		currentGCount := 0
 		for i, r := range w {
 			// remove words with blank runes
@@ -114,6 +113,9 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 					wordHasWrongY = true
 					break
 				}
+				if i != yindex && string(r) == y {
+					currentYCount++
+				}
 			}
 			if wordHasWrongY {
 				break
@@ -125,11 +127,11 @@ func narrowDownWordList(wordList []string, guess string, result string) []string
 				}
 			}
 		}
-		if !wordHasBlank && !wordHasWrongY && greenRunesCount == currentGCount {
+		if !wordHasBlank && !wordHasWrongY && yellowRunesCount == currentYCount && greenRunesCount == currentGCount {
 			newWordList = append(newWordList, w)
 		}
 	}
-	return newWordList
+	return yellowRunes, greenRunes, newWordList
 }
 
 func main() {
@@ -138,6 +140,8 @@ func main() {
 
 	var wordList = getInitialWordList(*path)
 	try := 1
+	yellowRunes := map[string]int{}
+	greenRunes := map[string]int{}
 
 	for try < 7 {
 		fmt.Printf("Try number %d\n", try)
@@ -163,7 +167,7 @@ func main() {
 			break
 		}
 
-		wordList = narrowDownWordList(wordList, guess, result)
+		yellowRunes, greenRunes, wordList = narrowDownWordList(wordList, yellowRunes, greenRunes, guess, result)
 		try++
 	}
 	fmt.Println("Game over.")
