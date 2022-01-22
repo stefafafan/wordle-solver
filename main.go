@@ -139,19 +139,26 @@ func main() {
 	flag.Parse()
 
 	var wordList = getInitialWordList(*path)
+	candidateList := wordList
 	try := 1
 	yellowRunes := map[string]int{}
 	greenRunes := map[string]int{}
 
 	for try < 7 {
-		fmt.Printf("Try number %d\n", try)
-		var runeScoreMap = getRuneScoreMap(wordList)
+		fmt.Printf("-----Try number %d-----\n", try)
+		if len(candidateList) > 10 {
+			fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n\n", len(candidateList), candidateList[0:10])
+		} else {
+			fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n\n", len(candidateList), candidateList)
+		}
+
+		var runeScoreMap = getRuneScoreMap(candidateList)
 		var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
 		var sortedwordScoreMap = rankByWordCount(wordScoreMap)
 		if sortedwordScoreMap.Len() > 10 {
-			fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+			fmt.Printf("Here are the first 10 recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap[0:10])
 		} else {
-			fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap)
+			fmt.Printf("Here are the recommendations to help narrow down the word:\n%v\n\n", sortedwordScoreMap)
 		}
 
 		scanner := bufio.NewScanner(os.Stdin)
@@ -167,7 +174,7 @@ func main() {
 			break
 		}
 
-		yellowRunes, greenRunes, wordList = narrowDownWordList(wordList, yellowRunes, greenRunes, guess, result)
+		yellowRunes, greenRunes, candidateList = narrowDownWordList(candidateList, yellowRunes, greenRunes, guess, result)
 		try++
 	}
 	fmt.Println("Game over.")
