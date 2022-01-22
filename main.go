@@ -79,18 +79,28 @@ func main() {
 	flag.Parse()
 
 	var initialWordList = getInitialWordList(*path)
-	fmt.Printf("%v\n", initialWordList)
+	try := 1
 
+	fmt.Printf("Try number %d\n", try)
 	var runeScoreMap = getRuneScoreMap(initialWordList)
-	for k, v := range runeScoreMap {
-		fmt.Printf("%c:%d\n", k, v)
-	}
-
 	var wordScoreMap = getWordScoreMap(initialWordList, runeScoreMap)
 	var sortedwordScoreMap = rankByWordCount(wordScoreMap)
-	fmt.Printf("There are %d words. Here are some of them: %v", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+	if sortedwordScoreMap.Len() > 10 {
+		fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+	} else {
+		fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
+	}
 
-	// TODO: prompt for guess and result
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Enter your guess: ")
+	scanner.Scan()
+	guess := scanner.Text()
+	fmt.Print("Enter the result (b: blank, y: yellow, g: green): ")
+	scanner.Scan()
+	result := scanner.Text()
+
+	fmt.Printf("Guess: %s, Result: %s", guess, result)
+
 	// TODO: narrow down word list from guess and result
 	// TODO: recalculate runeScoreMap && wordScoreMap (e.g recur)
 }
