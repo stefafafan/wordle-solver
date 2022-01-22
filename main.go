@@ -78,12 +78,12 @@ func main() {
 	path := flag.String("dictionary", "", "Specify dictionary file path")
 	flag.Parse()
 
-	var initialWordList = getInitialWordList(*path)
+	var wordList = getInitialWordList(*path)
 	try := 1
 
 	fmt.Printf("Try number %d\n", try)
-	var runeScoreMap = getRuneScoreMap(initialWordList)
-	var wordScoreMap = getWordScoreMap(initialWordList, runeScoreMap)
+	var runeScoreMap = getRuneScoreMap(wordList)
+	var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
 	var sortedwordScoreMap = rankByWordCount(wordScoreMap)
 	if sortedwordScoreMap.Len() > 10 {
 		fmt.Printf("There are %d candidates. Here are the first 10 candidates:\n%v\n", sortedwordScoreMap.Len(), sortedwordScoreMap[0:10])
