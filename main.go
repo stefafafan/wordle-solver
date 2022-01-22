@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// Returns word list parsed from file.
 func getInitialWordList(filePath string) []string {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -25,6 +26,7 @@ func getInitialWordList(filePath string) []string {
 	return initialWordList
 }
 
+// Returns the rune score map from the given word list.
 func getRuneScoreMap(wordList []string) map[rune]uint16 {
 	runeScoreMap := map[rune]uint16{}
 	for _, w := range wordList {
@@ -35,6 +37,7 @@ func getRuneScoreMap(wordList []string) map[rune]uint16 {
 	return runeScoreMap
 }
 
+// Returns the word score map from the given word list and rune score map.
 func getWordScoreMap(wordList []string, runeScoreMap map[rune]uint16) map[string]int {
 	wordScoreMap := map[string]int{}
 	for _, w := range wordList {
@@ -51,6 +54,7 @@ func getWordScoreMap(wordList []string, runeScoreMap map[rune]uint16) map[string
 	return wordScoreMap
 }
 
+// Sorts the given word score map by value.
 // borrowed from https://stackoverflow.com/a/18695740
 func rankByWordCount(wordFrequencies map[string]int) PairList {
 	pl := make(PairList, len(wordFrequencies))
@@ -74,7 +78,10 @@ func (p PairList) Len() int           { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+// Narrows down the word list from the guess and result.
+// Receives yellowRunes and greenRunes to take into account previous results.
 func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRunes map[string]int, guess string, result string) (map[string]int, map[string]int, []string) {
+	// Parse/initialize values from the guess/result strings.
 	var blankRunes []string
 	for index, r := range result {
 		if string(r) == "b" {
@@ -109,10 +116,12 @@ func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRune
 			}
 			// choose words with wrong yellow runes
 			for y, yindex := range yellowRunes {
+				// if the word contains the yellow rune at the exact same spot, that word is wrong.
 				if i == yindex && string(r) == y {
 					wordHasWrongY = true
 					break
 				}
+				// count the number of yellow runes.
 				if i != yindex && string(r) == y {
 					currentYCount++
 				}
@@ -122,15 +131,22 @@ func narrowDownWordList(wordList []string, yellowRunes map[string]int, greenRune
 			}
 			// choose words with green runes
 			for g, gindex := range greenRunes {
+				// count the number of green runes.
 				if i == gindex && string(r) == g {
 					currentGCount++
 				}
 			}
 		}
+		// Append to the new word list only if
+		// - the word does not contain blank runes.
+		// - the word does not have yellow runes at wrong spots.
+		// - the word has a correct number of yellow runes.
+		// - the word has a correct number of green runes.
 		if !wordHasBlank && !wordHasWrongY && yellowRunesCount == currentYCount && greenRunesCount == currentGCount {
 			newWordList = append(newWordList, w)
 		}
 	}
+	// Return the yellow and green runes as well, for future use.
 	return yellowRunes, greenRunes, newWordList
 }
 
@@ -144,6 +160,7 @@ func main() {
 	yellowRunes := map[string]int{}
 	greenRunes := map[string]int{}
 
+	// You only get 6 tries.
 	for try < 7 {
 		fmt.Printf("-----Try number %d-----\n", try)
 		if len(candidateList) == 1 {
@@ -154,6 +171,8 @@ func main() {
 			fmt.Printf("There are %d candidates. Here are the candidates:\n%v\n\n", len(candidateList), candidateList)
 		}
 
+		// Note: the rune score map is calculated from the updated candidate list.
+		// The word score map uses the initial word list and the updated rune score map for recommendation.
 		var runeScoreMap = getRuneScoreMap(candidateList)
 		var wordScoreMap = getWordScoreMap(wordList, runeScoreMap)
 		var sortedwordScoreMap = rankByWordCount(wordScoreMap)
